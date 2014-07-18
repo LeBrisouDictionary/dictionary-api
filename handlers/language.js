@@ -1,4 +1,4 @@
-module.exports = function (req, rep) {
+module.exports.language = function (req, rep) {
   var db_plugin = req.server.plugins['dictionary-rdbms'],
       models = db_plugin.models,
       Word = models.Word,
@@ -40,6 +40,22 @@ module.exports = function (req, rep) {
     rep({ result: result })  
   })
   .catch(function(err){
+    rep({result: 'error'})
+  })
+}
+
+
+module.exports.all = function(req, rep){
+  var db_plugin = req.server.plugins['dictionary-rdbms'],
+      models = db_plugin.models,
+      Language = models.Language
+
+
+  Language.findAll({limit : req.query.limit})
+    .then(function(result){
+      rep({ result: result })  
+    })
+    .catch(function(err){
     rep({result: 'error'})
   })
 }

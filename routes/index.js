@@ -46,7 +46,7 @@ var handlers = require('../handlers'),
             failAction: 'error', //default useless here but want to know it
           },
           validate : {
-            failAction: errorHandler.validation,
+            
             query: false,
             params: false,
             payload : {
@@ -115,7 +115,7 @@ var handlers = require('../handlers'),
             failAction: 'error', //default useless here but want to know it
           },
           validate : {
-            failAction: errorHandler.validation,
+            
             query: false,
             params: false,
             payload : {
@@ -188,7 +188,7 @@ var handlers = require('../handlers'),
           ],
           handler: function(req, rep){ rep(req.pre.words) },
           validate : {
-            failAction: errorHandler.validation,
+            
             query: {
               limit: Joi.number().optional().default(10).example('10'),
               offset: Joi.number().optional().example("101"),
@@ -204,17 +204,53 @@ var handlers = require('../handlers'),
           tags: ['dictionary-api'],
           description: 'Search words by Language',
           pre: [
-            { method: handlers.language, assign: 'language'}
+            { method: handlers.language.language, assign: 'language'}
           ],
           handler: function(req, rep){ rep(req.pre.language) },
           validate : {
-            failAction: errorHandler.validation,
+            
             query: {
               id: Joi.number().optional(),
               language: Joi.string().optional().example('Spanish').default('Spanish'),
               limit: Joi.number().optional().default(10).example('10'),
               offset: Joi.number().optional().example("101"),
               order: Joi.string().optional().example('id ASC').default('id ASC')
+            }
+          }
+        }
+      },
+      {
+        path: "/languages/{limit?}",
+        method: "GET",
+        config : {
+          tags: ['dictionary-api'],
+          description: 'Search All Languages',
+          pre: [
+            { method: handlers.language.all, assign: 'language'}
+          ],
+          handler: function(req, rep){ rep(req.pre.language) },
+          validate : {
+            
+            query: {
+              limit: Joi.number().optional().default(50).example('50')
+            }
+          }
+        }
+      },
+      {
+        path: "/countries/{limit?}",
+        method: "GET",
+        config : {
+          tags: ['dictionary-api'],
+          description: 'Search All Countries',
+          pre: [
+            { method: handlers.countries.all, assign: 'language'}
+          ],
+          handler: function(req, rep){ rep(req.pre.language) },
+          validate : {
+            
+            query: {
+              limit: Joi.number().optional().default(50).example('50')
             }
           }
         }
@@ -230,7 +266,6 @@ var handlers = require('../handlers'),
           ],
           handler: function(req, rep){ rep(req.pre.word) },
           validate : {
-            failAction: errorHandler.validation,
             query: {
               id: Joi.number().optional(),
               lema: Joi.string().optional().example('hablar or ha%'),

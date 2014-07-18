@@ -3,7 +3,8 @@ nt bitwise: true, continue: true, debug: true, devel: true, eqeq: true, evil: tr
 
 var async = require('async'),
     Promise = require("bluebird"),
-    Hapi = require('hapi')
+    Hapi = require('hapi'),
+    error = require('./_error_util')
 
 
 
@@ -72,16 +73,7 @@ var add = function (req, rep) {
       return res
     }
 
-    function error(errno, name, err){
-      if(err){
-        err.name = name
-        return err
-      } 
-      var error = new Error(name)
-      error.errno = errno  // Assign a custom error errno
-      return error
-    }
-
+    
     function MyCommit() {
       this.commit().error(function (err) {
         if (err) {

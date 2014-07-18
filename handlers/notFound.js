@@ -1,3 +1,4 @@
+var error = require('./_error_util')
 
 module.exports = function (req, rep) {
 

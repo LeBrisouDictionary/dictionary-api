@@ -1,3 +1,5 @@
+var error = require('./_error_util')
+
 module.exports.language = function (req, rep) {
   var db_plugin = req.server.plugins['dictionary-rdbms'],
       models = db_plugin.models,
@@ -56,6 +58,6 @@ module.exports.all = function(req, rep){
       rep({ result: result })  
     })
     .catch(function(err){
-    rep({result: 'error'})
+    rep(error(null, 'get.language', err))
   })
 }

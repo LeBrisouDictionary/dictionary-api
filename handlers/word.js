@@ -1,3 +1,5 @@
+var error = require('./_error_util')
+
 module.exports.word = function (req, rep) {
   var db_plugin = req.server.plugins['dictionary-rdbms'],
       models = db_plugin.models,
@@ -74,7 +76,7 @@ module.exports.random = function (req, rep) {
   .catch(function(err){
     req.server.log(['catch'],result instanceof Error)
     if(!req._isBailed && !req._isReplied) {
-      rep({result: 'error'})
+      rep(error(null, 'get.word', err))
     }
   })
 }

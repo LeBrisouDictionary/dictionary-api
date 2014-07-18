@@ -1,8 +1,8 @@
 /*jslint bitwise: true, continue: true, debug: true, devel: true, eqeq: true, evil: true, forin: true, indent: 2, maxerr: 50, maxlen: 250, node: true, nomen: true, plusplus: true, regexp: true, sloppy: true, sub: true, vars: true, es5: true */
 
-var errorHandler = require('../errors'),
-    Promise = require('bluebird'),
-    async = require('async')
+var Promise = require('bluebird'),
+    async = require('async'),
+    error = require('./_error_util')
 
 var update = function (req, rep) {
   var db_plugin = req.server.plugins['dictionary-rdbms'],
@@ -47,9 +47,8 @@ var update = function (req, rep) {
       this.commit().error(function (err) {
         if (err) {
           req.log(['dictionary-api', 'error', 'query'],"Error Committing : ", err)
-          errorHandler.craft(err, 'add.commit')
-          errorHandler.sendError(err, rep)
-          next(err, p)
+          rep(error(null, 'update.commit', err))
+          
         }
         
       }).success(function(){
@@ -62,14 +61,13 @@ var update = function (req, rep) {
     function MyRollback(prev_err){
         this.rollback().error(function (err) {
             req.log(['dictionary-api', 'error', 'query'],'Error Rollback : ', err)
-            errorHandler.craft(err, 'add.rollback')
-            errorHandler.sendError(err, rep)          
+            rep(error(null, 'update.rollback', err))      
         }).success(function(){
           req.log(['dictionary-api', 'warn', 'query'],'Rollback Success')
           req.log(['dictionary-api', 'warn', 'query'],prev_err)
           p.success = false
           p.rollback = true
-          errorHandler.sendError(prev_err, rep)
+          rep(error(null, 'update.rollback', err))
         })
     }
    
@@ -94,7 +92,7 @@ var update = function (req, rep) {
         .then(function(definitionObj){
           if(definitionObj === null){
             req.log(['dictionary-api', 'debug', 'query'],'Definition ' + definition.id + ' not Found')
-            throw errorHandler.create(20002, 'update.updateDefinition.notFound') 
+            throw error(20002, 'update.updateDefinition.notFound') 
           }
           req.log(['dictionary-api', 'debug', 'query'],'Definition ' + definitionObj.id + ' Found')
 
@@ -132,7 +130,7 @@ var update = function (req, rep) {
             })
             .then(function(countryObj){
               if(countryObj === null){
-                throw errorHandler.create(20003, 'add.updateCountries.find.NotFound')
+                throw error(20003, 'add.updateCountries.find.NotFound')
               }
               req.log(['dictionary-api', 'debug', 'query'],'Country Found id : ' + countryObj.id)
 
@@ -160,7 +158,7 @@ var update = function (req, rep) {
             })
             .then(function(hyperlinkObj){
               if(hyperlinkObj === null){
-                throw errorHandler.create(20008, 'add.updateHyperlinks.find.NotFound')
+                throw error(20008, 'add.updateHyperlinks.find.NotFound')
               }
               req.log(['dictionary-api', 'debug', 'query'],'Hyperlink Found id : ' + hyperlinkObj.id)
 
@@ -184,7 +182,7 @@ var update = function (req, rep) {
         return Language.find({ where : { language : p.language } })
           .then(function(languageObj){
             if(languageObj === null){
-              throw errorHandler.create(20001, 'update.updateLanguage.NotFound')
+              throw error(20001, 'update.updateLanguage.NotFound')
             }
             req.log(['dictionary-api', 'debug', 'query'],'Language found id : ' + languageObj.id)
             return wordObj.setLanguage( languageObj, { transaction : t})
@@ -201,7 +199,7 @@ var update = function (req, rep) {
       return Word.find({ where : { id : p.wordId } })
         .then(function(wordObj){
           if(wordObj === null){
-            throw errorHandler.create(20000, 'update.findWord')
+            throw error(20000, 'update.findWord')
           }
           return wordObj
         })
@@ -227,7 +225,7 @@ var update = function (req, rep) {
           .then(function(synonymsObj){
             //console.log(synonymsObj.map(function(n){ return n.values}))
             if(synonymsObj === null || synonymsObj.length !== p.synonyms.length){
-              throw errorHandler.create(20004, 'add.updateSynonyms.find.NotFound')
+              throw error(20004, 'add.updateSynonyms.find.NotFound')
             }
             req.log(['dictionary-api', 'debug', 'query'],'Synonym(s) Found')
 
@@ -250,7 +248,7 @@ var update = function (req, rep) {
           .then(function(antonymsObj){
             console.log(antonymsObj.map(function(n){ return n.values}))
             if(antonymsObj === null || antonymsObj.length !== p.antonyms.length){
-              throw errorHandler.create(20005, 'add.updateAntonyms.find.NotFound')
+              throw error(20005, 'add.updateAntonyms.find.NotFound')
             }
             req.log(['dictionary-api', 'debug', 'query'],'Antonym(s) Found')
 
@@ -273,7 +271,7 @@ var update = function (req, rep) {
           .then(function(relativesObj){
             console.log(relativesObj.map(function(n){ return n.values}))
             if(relativesObj === null || relativesObj.length !== p.relatives.length){
-              throw errorHandler.create(20004, 'add.updateRelatives.find.NotFound')
+              throw error(20004, 'add.updateRelatives.find.NotFound')
             }
             req.log(['dictionary-api', 'debug', 'query'],'Relatives(s) Found')
 

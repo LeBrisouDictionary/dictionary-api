@@ -1,7 +1,6 @@
 
 var handlers = require('../handlers'),
-    Joi = require('joi'),
-    errorHandler = require('../errors'),
+    Joi = require('joi')
     /**
      * Hapi Routes : http://hapijs.com/api#serverrouteoptions
      * @type {Array}

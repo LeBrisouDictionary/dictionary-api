@@ -1,24 +1,45 @@
 var internals = {}
 
 exports.register = function (plugin, options, next) {
+  // var Bcrypt = require('bcrypt')
 
-  var sequelize = plugin.servers[0].plugins['dictionary-rdbms']
+  // // plugin.dependency('dictionary-rdbms')
 
-  plugin.bind({
-  	db : sequelize.db,
-  	models: sequelize.models
-  })
+  // // plugin.register(require('hapi-auth-basic'), function(err) {
+  // //   if (err){
+  // //     console.log(err)
+  // //   }
+  // // })
 
-	plugin.events.once('start', function () {
+  // // var users = {
+  // //     test: {
+  // //         user: 'test'
+  // //     },
+  // //     erol: {
+  // //         user: 'erol'
+  // //     }
+  // // }
 
-	  plugin.route(require('./routes'))
-	  
-	})
+  // // var validate = function (username, password, callback) {
 
-  next()
+  // //     Bcrypt.compare(password, passwords[username], function (err, isValid) {
+  // //       if(err){
+  // //         log.error(err)
+  // //       }
+  // //       callback(null, isValid, users[username])
+  // //     })
+  // // }
+  // // //must be called before adding routes
+  // // plugin.auth.scheme({ strategies: ['basic'] } , validate)
+  // // plugin.auth.strategy('basic', 'basic', { validateFunc: validate }, true)
+    
+  
+	plugin.route(require('./routes'))
 
-},{
-	before: 'dictionary-rdbms'
+	next()
+
+
+
 }
 
 exports.register.attributes = {

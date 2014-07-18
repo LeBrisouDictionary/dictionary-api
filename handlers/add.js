@@ -1,9 +1,10 @@
 /*jsli
 nt bitwise: true, continue: true, debug: true, devel: true, eqeq: true, evil: true, forin: true, indent: 2, maxerr: 50, maxlen: 250, node: true, nomen: true, plusplus: true, regexp: true, sloppy: true, sub: true, vars: true, es5: true */
 
-var errorHandler = require('../errors'),
-    async = require('async'),
-    Promise = require("bluebird")
+var async = require('async'),
+    Promise = require("bluebird"),
+    Hapi = require('hapi')
+
 
 
 /**
@@ -24,9 +25,10 @@ var errorHandler = require('../errors'),
  *
  */
 var add = function (req, rep) {
-
-  var S = this.db,
-      models = this.models,
+  var db_plugin = req.server.plugins['dictionary-rdbms']
+  
+  var S = db_plugin.db,
+      models = db_plugin.models,
       p = req.payload,
       Word = models.Word,
       Definition = models.Definition,
@@ -70,13 +72,22 @@ var add = function (req, rep) {
       return res
     }
 
+    function error(errno, name, err){
+      if(err){
+        err.name = name
+        return err
+      } 
+      var error = new Error(name)
+      error.errno = errno  // Assign a custom error errno
+      return error
+    }
+
     function MyCommit() {
       this.commit().error(function (err) {
         if (err) {
           req.log(['dictionary-api', 'error', 'add'],"Error Committing : ", err)
-          errorHandler.craft(err, 'add.commit')
-          errorHandler.sendError(err, rep)
-          next(err, p)
+          rep(error(null, 'add.commit', err))
+          
         }
         
       }).success(function(){
@@ -89,21 +100,21 @@ var add = function (req, rep) {
     function MyRollback(prev_err){
         this.rollback().error(function (err) {
             req.log(['dictionary-api', 'error', 'add'],'Error Rollback : ', err)
-            errorHandler.craft(err, 'add.rollback')
-            errorHandler.sendError(err, rep)          
+            rep(error(null, 'add.rollback', err))
+            
         }).success(function(){
           req.log(['dictionary-api', 'warn', 'query'],'Rollback Success')
           req.log(['dictionary-api', 'warn', 'query'],prev_err)
           p.success = false
           p.rollback = true
-          errorHandler.sendError(prev_err, rep)
+          rep(error(null, 'sql', prev_err))
         })
     }
 
     function checkDuplicateId(array){
       
       if(!(array instanceof Object)){
-        throw errorHandler.create(19999, "add.checkDuplicateId")
+        throw error(19999, "add.checkDuplicateId")
       }
       
       for (var i = 0 ; i < array.length ; i++) {
@@ -127,7 +138,7 @@ var add = function (req, rep) {
         return Language.find({ where: { language: p.language } }, { transaction: t })
         .then(function(languageObj){
           if(languageObj === null) {
-            throw errorHandler.create(20001, 'add.setLanguageId')
+            throw error(20001, 'add.setLanguageId')
           } else {
             req.log(['dictionary-api', 'debug', 'add'],'Language Found ' + languageObj.id)
             return word.setLanguage( languageObj, { lock: "UPDATE", transaction : t })
@@ -167,7 +178,7 @@ var add = function (req, rep) {
           })
           .then(function(relativesObj) {
             if(relativesObj.length === 0) {
-              throw errorHandler.create(20016, 'add.Relatives')
+              throw error(20016, 'add.Relatives')
             } else {
               req.log(['dictionary-api', 'debug', 'add'],'Relatives Found')
               return word.setRelatives(relativesObj,{transaction : t})
@@ -192,9 +203,9 @@ var add = function (req, rep) {
           })
           .then(function(synonyms) {
             if(synonyms.length === 0) {
-              throw errorHandler.create(20004, 'add.Synonyms')
+              throw error(20004, 'add.Synonyms')
             } else if(checkDuplicateId(synonyms)){
-              throw errorHandler.create(20050, 'add.Synonyms')
+              throw error(20050, 'add.Synonyms')
             } else {
               req.log(['dictionary-api', 'debug', 'add'],'Synonyms Found')
               return word.setSynonyms(synonyms,{transaction : t})
@@ -217,9 +228,9 @@ var add = function (req, rep) {
           })
           .then(function(antonyms) {
             if(antonyms.length === 0) {
-              throw errorHandler.create(20005, 'add.Antonyms')
+              throw error(20005, 'add.Antonyms')
             } else if(checkDuplicateId(antonyms)){
-              throw errorHandler.create(20051, 'add.Synonyms')
+              throw error(20051, 'add.Synonyms')
             } else {
               req.log(['dictionary-api', 'debug', 'add'],'antonyms Found')
               return word.setAntonyms(antonyms,{transaction : t})
@@ -259,7 +270,7 @@ var add = function (req, rep) {
       return definitionObj.save({lock:"UPDATE", transaction: t})
         .then(function(definitionObj){
           if(definitionObj === null){
-            throw errorHandler.create(1, 'add.insertDefinition.null') //could be 20013
+            throw error(1, 'add.insertDefinition.null') //could be 20013
           }
           req.log(['dictionary-api', 'debug', 'add'],'Definition ' + definitionObj.id + ' Saved Successfully')
           tempDefinitionsObjects.push(definitionObj)
@@ -305,7 +316,7 @@ var add = function (req, rep) {
             .then(function(countryObj){
               if(countryObj === null){
                 return Promise.reject(
-                  errorHandler.create(20003, 'add.insertCountries.find.NotFound'))
+                  error(20003, 'add.insertCountries.find.NotFound'))
               }
               req.log(['dictionary-api', 'debug', 'add'],'Country Found id : ' + countryObj.id)
 

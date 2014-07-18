@@ -2,16 +2,13 @@
 
 var errorHandler = {
   validation : function (source, error, next) {
-
-    details = error.data.details[0]
-
     next(error)
   },
   craft : function (err, source) {
     err.source = source
     return err
   },
-  sendError: function(err, next){
+  sendError: function(err, rep){
     var Hapi = require('hapi'),
         mess = require('./codes')
    
@@ -21,17 +18,16 @@ var errorHandler = {
     error.reformat()
     error.output.payload.source  = 'LeBrisou-Backend'
     error.output.payload.error = true
-    next(error)
+    rep(error)
   },
   create: function(errno, source){
     
     var mess = require('./codes'),
-        err = new Error(mess[errno])
+        err = new Error(mess[errno]|| mess[19999])
 
     err.errno = errno
     err.source = source
     err.error = true
-    //err.created = true
     return err
   }
 }

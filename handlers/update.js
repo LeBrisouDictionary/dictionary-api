@@ -5,8 +5,9 @@ var errorHandler = require('../errors'),
     async = require('async')
 
 var update = function (req, rep) {
-  var S = this.db,
-      models = this.models,
+  var db_plugin = req.server.plugins['dictionary-rdbms'],
+      S = db_plugin.db,
+      models = db_plugin.models,
       p = req.payload,
       Word = models.Word,
       Definition = models.Definition,
@@ -224,7 +225,7 @@ var update = function (req, rep) {
         return Word.findAll(
           { where : ["id IN ("+p.synonyms.map(function(n){ return n.id}).join(',')+")"]}, { transaction : t})
           .then(function(synonymsObj){
-            console.log(synonymsObj.map(function(n){ return n.values}))
+            //console.log(synonymsObj.map(function(n){ return n.values}))
             if(synonymsObj === null || synonymsObj.length !== p.synonyms.length){
               throw errorHandler.create(20004, 'add.updateSynonyms.find.NotFound')
             }

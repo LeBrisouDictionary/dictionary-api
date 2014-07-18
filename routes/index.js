@@ -8,37 +8,35 @@ var handlers = require('../handlers'),
      */
     routes = [
       {
-        path: '/{p*}',
-        method: '*',
-        handler: handlers.notFound,
+        path: "/",
+        method: "DELETE",
+        config : {
+          tags: ['dictionary-api'],
+          description: 'Delete a Word by id',
+          pre: [
+            { method: handlers.delete, assign: 'word'}
+          ],
+          handler: function(req, rep){ rep(req.pre.word) },
+          payload : {
+            output : 'data',
+            parse: true,
+            allow: 'application/json',
+            failAction: 'error', //default useless here but want to know it
+          },
+          validate: {
+            query: false,
+            params: false,
+            payload : {
+              id: Joi.number().required().example('1')
+            }
+          }
+        }
       },
-      // {
-      //   path: '/register',
-      //   method: 'POST',
-      //   config : {
-      //     description: 'Register new user in KVDMS',
-      //     handler: handlers.register,
-      //     payload : {
-      //       output : 'data',
-      //       parse: true,
-      //       allow: 'application/json',
-      //       failAction: 'error', //default useless here but want to know it
-      //     },
-      //     validate : {
-      //       failAction: errorHandler.validation,
-      //       query: false,
-      //       params: false,
-      //       payload : {
-      //         username: Joi.string().min(5).max(12).required(),
-      //         password: Joi.string().min(8).regex(/^(?=(.*\d){2})(?=.*[a-zA-Z])(?=.*[!@#$%])[0-9a-zA-Z!@#$%]/).required(),
-      //       }
-      //     }
-      //   }
-      // },
       {
         path: "/",
         method: "PUT",
         config : {
+          tags: ['dictionary-api'],
           description: 'Add word into RDBMS',
           handler: handlers.add,
           payload : {
@@ -107,6 +105,7 @@ var handlers = require('../handlers'),
         path: "/",
         method: "POST",
         config : {
+          tags: ['dictionary-api'],
           description: 'update word into database',
           handler: handlers.update,
           payload : {
@@ -168,10 +167,10 @@ var handlers = require('../handlers'),
               ).optional(),
               'hyperlinks': Joi.array().includes(
                 Joi.object().keys({
-                  id: Joi.number().required(),
+                  id: Joi.number().required().example('1'),
                   hyperlink : Joi.string().regex(
                     /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/
-                  ).required()
+                  ).required().example('http://puzzledge.eu')
                 }).optional()
               )
             }
@@ -179,22 +178,83 @@ var handlers = require('../handlers'),
         }
       },
       {
-        path: "/",
+        path: "/words/{limit?}",
         method: "GET",
         config : {
+          tags: ['dictionary-api'],
           description: 'Search into database',
-          handler: handlers.query,
+          pre: [
+            { method: handlers.words, assign: 'words'}
+          ],
+          handler: function(req, rep){ rep(req.pre.words) },
           validate : {
             failAction: errorHandler.validation,
             query: {
-              limit: Joi.number().optional(),
-              wordId: Joi.number().optional(),
-              lema: Joi.string().optional(),
-              pos: Joi.string().optional(),
-              gerund: Joi.string().optional(),
-              participle: Joi.string().optional(),
+              limit: Joi.number().optional().default(10).example('10'),
+              offset: Joi.number().optional().example("101"),
+              order: Joi.string().optional().example('id ASC').default('id ASC'),             
             }
           }
+        }
+      },
+      {
+        path: "/language",
+        method: "GET",
+        config : {
+          tags: ['dictionary-api'],
+          description: 'Search words by Language',
+          pre: [
+            { method: handlers.language, assign: 'language'}
+          ],
+          handler: function(req, rep){ rep(req.pre.language) },
+          validate : {
+            failAction: errorHandler.validation,
+            query: {
+              id: Joi.number().optional(),
+              language: Joi.string().optional().example('Spanish').default('Spanish'),
+              limit: Joi.number().optional().default(10).example('10'),
+              offset: Joi.number().optional().example("101"),
+              order: Joi.string().optional().example('id ASC').default('id ASC')
+            }
+          }
+        }
+      },
+      {
+        path: "/word",
+        method: "GET",
+        config : {
+          tags: ['dictionary-api'],
+          description: 'Search a word by Id and/or lema and/or pos and/or gerund and/or participle, partial query are possible : like a%',
+          pre: [
+            { method: handlers.word.word, assign: 'word'}
+          ],
+          handler: function(req, rep){ rep(req.pre.word) },
+          validate : {
+            failAction: errorHandler.validation,
+            query: {
+              id: Joi.number().optional(),
+              lema: Joi.string().optional().example('hablar or ha%'),
+              pos: Joi.string().optional().example('v'),
+              gerund: Joi.string().optional().example('hablando or %ando'),
+              participle: Joi.string().optional().example('hablado'),
+              limit: Joi.number().optional().default(10).example('10')
+            }
+          }
+        }
+      },
+      {
+        path: "/word/random",
+        method: "GET",
+        config : {
+          cache : {
+            'expiresIn': 60 * 1,
+          },
+          tags: ['dictionary-api'],
+          description: 'Random Word',
+          pre: [
+            { method: handlers.word.random, assign: 'word'}
+          ],
+          handler: function(req, rep){ rep(req.pre.word) },
         }
       }]
 

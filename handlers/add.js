@@ -4,7 +4,7 @@ nt bitwise: true, continue: true, debug: true, devel: true, eqeq: true, evil: tr
 var async = require('async'),
     Promise = require("bluebird"),
     Hapi = require('hapi'),
-    error = require('./_error_util')
+    error = require('./utils').error
 
 
 

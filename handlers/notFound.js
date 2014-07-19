@@ -1,4 +1,4 @@
-var error = require('./_error_util')
+var error = require('./utils').error
 
 module.exports = function (req, rep) {
 

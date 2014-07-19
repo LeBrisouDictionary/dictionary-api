@@ -1,4 +1,6 @@
-var error = require('./_error_util')
+var utils = require('./utils'),
+    error = utils.error,
+    Fields = utils.fields
 
 module.exports.word = function (req, rep) {
   var db_plugin = req.server.plugins['dictionary-rdbms'],
@@ -8,8 +10,8 @@ module.exports.word = function (req, rep) {
       Hyperlink = models.Hyperlink,
       Country = models.Country,
       Language = models.Language,
-      Example = models.Example
-
+      Example = models.Example,
+      fields = Fields(models)
 
   if(Object.keys(req.query).length === 1){
     return rep({result: null})
@@ -18,24 +20,20 @@ module.exports.word = function (req, rep) {
   var limit = req.query.limit 
   delete req.query.limit
 
-  var query = Object.keys(req.query).map(function(value){
+  var extended = req.query.extended 
+  delete req.query.extended
+
+  var query = {}
+  query.where = Object.keys(req.query).map(function(value){
     if(value === 'limit') return
     return '`Words`.' + value + ' like "' + req.query[value] + '"'
   }).join(' AND ')
 
-  console.log(query)
   
-  Word.findAll({ where : query,
-    limit: limit,
-    include : [
-      { model : Word, as : 'Relatives'},
-      { model : Word, as : 'Synonyms' },
-      { model : Word, as : 'Antonyms' },
-      { model : Language },
-      { model : Country},
-      { model : Hyperlink},
-      { model : Definition, include : [Example]}
-    ]})
+  query.include = fields[extended]
+  query.attributes = (!extended) ? fields.attributes : []
+
+  Word.findAll(query)
   .then(function(result){
     rep( { result: result })
   })
@@ -53,20 +51,14 @@ module.exports.random = function (req, rep) {
       Hyperlink = models.Hyperlink,
       Country = models.Country,
       Language = models.Language,
-      Example = models.Example
+      Example = models.Example,
+      fields = Fields(models)
 
   return Word.count()
   .then(function(count){
     return Word.find({ where : {id : Math.floor((Math.random() * count) + 1)},
-      include : [
-        { model : Word, as : 'Relatives'},
-        { model : Word, as : 'Synonyms' },
-        { model : Word, as : 'Antonyms' },
-        { model : Language },
-        { model : Country},
-        { model : Hyperlink},
-        { model : Definition, include : [Example]}
-      ]})
+      attributes: (!req.query.extended) ? fields.wordAttributes : [],
+      include : fields[req.query.extended]})
   })
   .then(function(result){
     if(!req._isBailed && !req._isReplied) {

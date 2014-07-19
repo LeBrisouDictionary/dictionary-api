@@ -2,7 +2,7 @@
 
 var Promise = require('bluebird'),
     async = require('async'),
-    error = require('./_error_util')
+    error = require('./utils').error
 
 var update = function (req, rep) {
   var db_plugin = req.server.plugins['dictionary-rdbms'],

@@ -1,4 +1,6 @@
-var error = require('./_error_util')
+var utils = require('./utils'),
+    error = utils.error,
+    Fields = utils.fields
 
 module.exports.language = function (req, rep) {
   var db_plugin = req.server.plugins['dictionary-rdbms'],
@@ -8,7 +10,8 @@ module.exports.language = function (req, rep) {
       Hyperlink = models.Hyperlink,
       Country = models.Country,
       Language = models.Language,
-      Example = models.Example
+      Example = models.Example,
+      fields = Fields(models)
 
   var query = { where : {}}
   query.where.language = req.query.language
@@ -16,7 +19,7 @@ module.exports.language = function (req, rep) {
   if(req.query.id){
     query.where.id = req.query.id
   }
-
+  
   query.limit = req.query.limit
   
   
@@ -24,19 +27,12 @@ module.exports.language = function (req, rep) {
 
   Language.find(query)
   .then(function(result){
-    return Word.findAll({where : {languageId: result.id }, 
+    return Word.findAll({where : {languageId: result.id },
+      attributes: (!req.query.extended) ? fields.wordAttributes : [],
       limit : req.query.limit,
       offset: req.query.offset,
       order: req.query.order,
-      include : [
-      { model : Word, as : 'Relatives'},
-      { model : Word, as : 'Synonyms' },
-      { model : Word, as : 'Antonyms' },
-      { model : Language },
-      { model : Country},
-      { model : Hyperlink},
-      { model : Definition, include : [Example]},
-    ]})
+      include : fields[req.query.extended]})
   })
   .then(function(result){
     rep({ result: result })  
@@ -50,14 +46,18 @@ module.exports.language = function (req, rep) {
 module.exports.all = function(req, rep){
   var db_plugin = req.server.plugins['dictionary-rdbms'],
       models = db_plugin.models,
-      Language = models.Language
+      Language = models.Language,
+      fields = Fields(models)
 
 
-  Language.findAll({limit : req.query.limit})
-    .then(function(result){
-      rep({ result: result })  
-    })
-    .catch(function(err){
+  Language.findAll({
+    limit : req.query.limit,
+    attributes: (!req.query.extended) ? fields.languageAttributes : []
+  })
+  .then(function(result){
+    rep({ result: result })  
+  })
+  .catch(function(err){
     rep(error(null, 'get.language', err))
   })
 }

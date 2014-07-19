@@ -189,7 +189,8 @@ var handlers = require('../handlers'),
           validate : {
             
             query: {
-              limit: Joi.number().optional().default(10).example('10'),
+              extended: Joi.boolean().optional().default(false),
+              limit: Joi.number().optional().max(100).default(10).example('10'),
               offset: Joi.number().optional().example("101"),
               order: Joi.string().optional().example('id ASC').default('id ASC'),             
             }
@@ -210,6 +211,7 @@ var handlers = require('../handlers'),
             
             query: {
               id: Joi.number().optional(),
+              extended: Joi.boolean().optional().default(false),
               language: Joi.string().optional().example('Spanish').default('Spanish'),
               limit: Joi.number().optional().default(10).example('10'),
               offset: Joi.number().optional().example("101"),
@@ -231,6 +233,7 @@ var handlers = require('../handlers'),
           validate : {
             
             query: {
+              extended: Joi.boolean().optional().default(false),
               limit: Joi.number().optional().default(50).example('50')
             }
           }
@@ -249,6 +252,7 @@ var handlers = require('../handlers'),
           validate : {
             
             query: {
+              extended: Joi.boolean().optional().default(false),
               limit: Joi.number().optional().default(50).example('50')
             }
           }
@@ -271,7 +275,8 @@ var handlers = require('../handlers'),
               pos: Joi.string().optional().example('v'),
               gerund: Joi.string().optional().example('hablando or %ando'),
               participle: Joi.string().optional().example('hablado'),
-              limit: Joi.number().optional().default(10).example('10')
+              limit: Joi.number().optional().default(10).example('10'),
+              extended: Joi.boolean().optional().default(false),
             }
           }
         }
@@ -289,6 +294,11 @@ var handlers = require('../handlers'),
             { method: handlers.word.random, assign: 'word'}
           ],
           handler: function(req, rep){ rep(req.pre.word) },
+          validate: {
+            query: {
+              extended: Joi.boolean().optional().default(false)
+            }
+          }
         }
       }]
 

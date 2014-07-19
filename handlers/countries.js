@@ -8,11 +8,12 @@ module.exports.all = function(req, rep){
       Country = models.Country,
       fields = Fields(models)
 
+  var query = { limit : req.query.limit }
+  if(!req.query.extended){
+    query.attributes = fields.countryAttributes 
+  }
 
-  Country.findAll({
-    limit : req.query.limit,
-    attributes: (!req.query.extended) ? fields.countryAttributes : []
-  })
+  Country.findAll(query)
   .then(function(result){
     rep({ result: result })  
   })

@@ -13,7 +13,7 @@ module.exports.word = function (req, rep) {
       Example = models.Example,
       fields = Fields(models)
 
-  if(Object.keys(req.query).length === 1){
+  if(Object.keys(req.query).length === 2){
     return rep({result: null})
   }
 
@@ -31,9 +31,12 @@ module.exports.word = function (req, rep) {
 
   
   query.include = fields[extended]
-  query.attributes = (!extended) ? fields.attributes : []
+  if(!extended){
+    query.attributes = fields.wordAttributes 
+  }
+  
 
-  Word.findAll(query)
+  Word.find(query)
   .then(function(result){
     rep( { result: result })
   })
@@ -54,10 +57,13 @@ module.exports.random = function (req, rep) {
       Example = models.Example,
       fields = Fields(models)
 
+  if(!req.query.extended){
+    query.attributes = fields.wordAttributes 
+  }
+
   return Word.count()
   .then(function(count){
-    return Word.find({ where : {id : Math.floor((Math.random() * count) + 1)},
-      attributes: (!req.query.extended) ? fields.wordAttributes : [],
+    return Word.find({ where : { id : Math.floor((Math.random() * count) + 1)},
       include : fields[req.query.extended]})
   })
   .then(function(result){

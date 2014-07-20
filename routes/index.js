@@ -49,53 +49,76 @@ var handlers = require('../handlers'),
             query: false,
             params: false,
             payload : {
-              'lema' : Joi.string().required().example('desayuno'),
-              'pos' : Joi.string().required(),
-              'gerund': Joi.string().optional(),
-              'participle': Joi.string().optional(),
+              'lema' : Joi.string().required().example('dormir'),
+              'pos' : Joi.string().required().example('v'),
+              'gerund': Joi.string().optional().regex(/^.*iendo|ando$/).example('durmiendo'),
+              'participle': Joi.string().optional().example('dormido'),
               'countries': Joi.array().includes(
                 Joi.object().keys({
-                  'country' : Joi.string().min(1).max(20).required(),
-                  'frequency': Joi.number().min(0).max(100).integer().optional()
-                }).required()
-              ).required(),
-              'register': Joi.boolean(),
-              'language': Joi.string().required(),
+                  'country' : Joi.string().min(1).max(20).required().example('Spain').default('Spain'),
+                  'frequency': Joi.number().min(0).max(100).integer().optional().example('10').default('0')
+                }).required().example({ country : 'Spain', frequency: 12})
+              ).required().example(
+                [
+                  { country : 'Spain', frequency: 12},
+                  { country : 'Costa Rica', frequency: 2}
+                ]
+              ),
+              'register': Joi.boolean().default(true).example(true),
+              'language': Joi.string().required().example('Spanish').default('Spanish'),
               'definitions': Joi.array().includes(
                 Joi.object().keys(
                   {
-                    'definition': Joi.string(),
-                    'examples': Joi.array().includes(Joi.string()).optional()
+                    'definition': Joi.string().example('Vocablo de carácter y uso académico o literario'),
+                    'examples': Joi.array().includes(Joi.string().example('graduarse cum laude')).optional()
+                      .example(['graduarse cum laude', 'Abarroto mi maleta de ropa'])
                   }
-                ).required()
+                ).required().example( {definition : 'first def', examples: ['graduarse cum laude', 'Abarroto mi maleta de ropa']})
+              ).example(
+                [
+                  {definition : 'first def', examples: ['graduarse cum laude', 'Abarroto mi maleta de ropa']},
+                  {definition : 'second def', examples: ['graduarse cum laude', 'Abarroto mi maleta de ropa']}
+                ]
               ),
               'synonyms': Joi.array().includes(
                 Joi.object().keys(
                   {
-                    'lema': Joi.string().required(),
-                    'pos': Joi.string().required()
+                    'lema': Joi.string().required().example('adormecer'),
+                    'pos': Joi.string().required().example('vtr')
                   }
-                ).required()
-              ).optional(),
+                ).required().example({lema: 'adormecer', pos: 'vtr'})
+              ).optional().example(
+                [
+                  {lema: 'adormecer', pos: 'vtr'},
+                  {lema: 'hablar', pos: 'vtr'}
+                ]),
               'antonyms': Joi.array().includes(
                 Joi.object().keys(
                   {
-                    'lema': Joi.string().required(),
-                    'pos': Joi.string().required()
+                    'lema': Joi.string().required().example('despertarse'),
+                    'pos': Joi.string().required().example('vtr')
                   }
-                ).required()
-              ).optional(),
+                ).required().example({lema: 'adormecer', pos: 'vtr'})
+              ).optional().example(
+                [
+                  {lema: 'adormecer', pos: 'vtr'},
+                  {lema: 'hablar', pos: 'vtr'}
+                ]),
               'relatives': Joi.array().includes(
                 Joi.object().keys(
                   {
-                    'lema': Joi.string().required(),
-                    'pos': Joi.string().required()
+                    'lema': Joi.string().required().example('adormecer'),
+                    'pos': Joi.string().required().example('vtr')
                   }
-                ).required()
-              ).optional(),
+                ).required().example({lema: 'adormecer', pos: 'vtr'})
+              ).optional().example(
+                [
+                  {lema: 'adormecer', pos: 'vtr'},
+                  {lema: 'hablar', pos: 'vtr'}
+                ]),
               'hyperlinks': Joi.array().includes(Joi.string().regex(
                 /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/
-              ).required()).optional()
+              ).required().example('http://fr.wiktionary.org/wiki/nomenclatura')).optional().example(['http://fr.wiktionary.org/wiki/nomenclatura', 'http://google.fr'])
             }
           }
         }
@@ -118,60 +141,77 @@ var handlers = require('../handlers'),
             query: false,
             params: false,
             payload : {
-              'wordId': Joi.number().required(),
-              'gerund': Joi.string().optional(),
-              'participle': Joi.string().optional(),
+              'wordId': Joi.number().required().example('1023'),
+              'gerund': Joi.string().optional().example('durmiendo, hablando. It must end with "ando" or "iendo"'),
+              'participle': Joi.string().optional().example('dormido'),
               'countries': Joi.array().includes(
                 Joi.object().keys({
-                  'country' : Joi.string().min(3).max(32).required(),
-                  'frequency': Joi.number().min(0).max(100).integer().optional()
-                }).required()
-              ).optional(),
-              'register': Joi.boolean().optional(),
-              'language': Joi.string().optional(),
+                  'country' : Joi.string().min(3).max(32).required().example('Spain'),
+                  'frequency': Joi.number().min(0).max(100).integer().optional().example(10)
+                }).required().example({ country : 'Spain', frequency: 12})
+              ).optional().example(
+                [
+                  { country : 'Spain', frequency: 12},
+                  { country : 'Costa Rica', frequency: 2}
+                ]
+              ),
+              'register': Joi.boolean().optional().example(true),
+              'language': Joi.string().optional().example('Spanish'),
               'definitions': Joi.array().includes(
                 Joi.object().keys({
-                    'id': Joi.number().required(),
-                    'definition': Joi.string().required(),
+                    'id': Joi.number().required().example(1),
+                    'definition': Joi.string().required().example('Persona que cumple años'),
                     'examples': Joi.array().includes(
                       Joi.object().keys({
-                        'id': Joi.number().required(),
-                        'example' : Joi.string().required()
+                        'id': Joi.number().required().example(2329),
+                        'example' : Joi.string().required().example('Es un artista cuyas obras han recibido grandes elogios')
                       }).required()
                     ).optional()
                 }).required()
               ).optional(),
               'synonyms': Joi.array().includes(
                 Joi.object().keys({
-                    'id': Joi.number().required(),
-                    'lema': Joi.string().required(),
-                    'pos': Joi.string().required()
-                  }).required()
-              ).optional(),
+                    'id': Joi.number().required().example(234),
+                    'lema': Joi.string().required().example('hablar'),
+                    'pos': Joi.string().required().example('vtr')
+                  }).required().example({ id: 12, lema: 'adormecer', pos: 'vtr'})
+              ).optional().example(
+                [
+                  {id: 12,lema: 'adormecer', pos: 'vtr'},
+                  {id: 13,lema: 'hablar', pos: 'vtr'}
+                ]),
               'antonyms': Joi.array().includes(
                 Joi.object().keys({
-                    'id': Joi.number().required(),
-                    'lema': Joi.string().required(),
-                    'pos': Joi.string().required()
-                  }).required()
-              ).optional(),
+                    'id': Joi.number().required().example(234),
+                    'lema': Joi.string().required().example('hablar'),
+                    'pos': Joi.string().required().example('vtr')
+                  }).required().example({id: 12,lema: 'adormecer', pos: 'vtr'})
+              ).optional().example(
+                [
+                  {id: 12,lema: 'adormecer', pos: 'vtr'},
+                  {id: 13,lema: 'hablar', pos: 'vtr'}
+                ]),
               'relatives': Joi.array().includes(
                 Joi.object().keys(
                   {
-                    'id': Joi.number().required(),
-                    'lema': Joi.string().required(),
-                    'pos': Joi.string().required()
+                    'id': Joi.number().required().example(234),
+                    'lema': Joi.string().required().example('hablar'),
+                    'pos': Joi.string().required().example('vtr')                  
                   }
-                ).required()
-              ).optional(),
+                ).required().example({id: 12,lema: 'adormecer', pos: 'vtr'})
+              ).optional().example(
+                [
+                  {id: 12,lema: 'adormecer', pos: 'vtr'},
+                  {id: 13,lema: 'hablar', pos: 'vtr'}
+                ]),
               'hyperlinks': Joi.array().includes(
                 Joi.object().keys({
                   id: Joi.number().required().example('1'),
                   hyperlink : Joi.string().regex(
                     /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/
                   ).required().example('http://puzzledge.eu')
-                }).optional()
-              )
+                }).optional().example({ id : 2, hyperlink: 'http://puzzledge.eu'})
+              ).example([{ id : 2, hyperlink: 'http://puzzledge.eu'}, { id : 3, hyperlink: 'http://google.fr'}])
             }
           }
         }
@@ -192,7 +232,7 @@ var handlers = require('../handlers'),
           validate : {
             
             query: {
-              extended: Joi.boolean().optional().default(false),
+              extended: Joi.boolean().optional().default(false).example(true),
               limit: Joi.number().optional().max(100).default(10).example('10'),
               offset: Joi.number().optional().example('101'),
               order: Joi.string().optional().example('id ASC').default('id ASC'),             
@@ -228,11 +268,11 @@ var handlers = require('../handlers'),
             
             query: {
               id: Joi.number().optional(),
-              extended: Joi.boolean().optional().default(false),
+              extended: Joi.boolean().optional().default(false).example(true),
               language: Joi.string().optional().example('Spanish').default('Spanish'),
-              limit: Joi.number().optional().default(10).example('10'),
+              limit: Joi.number().min(1).max(100).optional().default(10).example('10'),
               offset: Joi.number().optional().example('101'),
-              order: Joi.string().optional().example('id ASC').default('id ASC')
+              order: Joi.string().optional().example('id ASC').default('id ASC').regex(/.* (ASC|DESC)/)
             }
           }
         }
@@ -250,8 +290,8 @@ var handlers = require('../handlers'),
           validate : {
             
             query: {
-              extended: Joi.boolean().optional().default(false),
-              limit: Joi.number().optional().default(50).example('50')
+              extended: Joi.boolean().optional().default(false).example(true),
+              limit: Joi.number().min(1).max(100).optional().default(50).example('50')
             }
           }
         }
@@ -269,8 +309,8 @@ var handlers = require('../handlers'),
           validate : {
             
             query: {
-              extended: Joi.boolean().optional().default(false),
-              limit: Joi.number().optional().default(50).example('50')
+              extended: Joi.boolean().optional().default(false).example(true),
+              limit: Joi.number().min(1).max(100).optional().default(50).example('50')
             }
           }
         }
@@ -304,8 +344,8 @@ var handlers = require('../handlers'),
               pos: Joi.string().optional().example('v'),
               gerund: Joi.string().optional().example('hablando or %ando'),
               participle: Joi.string().optional().example('hablado'),
-              limit: Joi.number().optional().default(10).example('10'),
-              extended: Joi.boolean().optional().default(false),
+              limit: Joi.number().min(1).max(100).optional().default(10).example('10'),
+              extended: Joi.boolean().optional().default(false).example(true),
             }
           }
         }
@@ -325,7 +365,7 @@ var handlers = require('../handlers'),
           handler: function(req, rep){ rep(req.pre.word) },
           validate: {
             query: {
-              extended: Joi.boolean().optional().default(false)
+              extended: Joi.boolean().optional().default(false).example(true),
             }
           }
         }

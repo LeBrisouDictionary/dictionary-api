@@ -1,7 +1,6 @@
 /*jslint bitwise: true, continue: true, debug: true, devel: true, eqeq: true, evil: true, forin: true, indent: 2, maxerr: 50, maxlen: 250, node: true, nomen: true, plusplus: true, regexp: true, sloppy: true, sub: true, vars: true, es5: true */
 
 var Promise = require('bluebird'),
-    async = require('async'),
     error = require('./utils').error
 
 var update = function (req, rep) {
@@ -76,11 +75,10 @@ var update = function (req, rep) {
     function updateDefinitions() {
       if(p.definitions){
         req.log(['dictionary-api', 'debug', 'query'],'Updating Definitions')
-        var promise = Promise.defer()
-        async.each(p.definitions, function(definition, callback){
-          promise = updateDefinition(definition)
+        return Promise.resolve(p.definitions).each(function(definition){
+          return updateDefinition(definition)
         })
-        return promise
+        
       } else {
         return Promise.resolve()
       }
@@ -101,22 +99,25 @@ var update = function (req, rep) {
             {lock:"UPDATE", transaction: t })
         })
         .then(function(definitionObj){
-          return updateExamples(definitionObj, definition.examples)
+          return updateExamples(definition.examples)
         })
     }
 
-    function updateExamples(definitionObj, examples) {
+    function updateExamples(examples) {
       if(examples){
         req.log(['dictionary-api', 'debug', 'query'],'Updating Examples')
         var promise = Promise.defer()
-        async.each(examples, function(example){
-          promise = Example.find({ where : { id : example.id }})
+        return Promise.resolve(examples).each(function(example){
+          return Example.find({ where : { id : example.id }})
             .then(function(exampleObj){
+              if(exampleObj === null){
+                req.log(['dictionary-api', 'debug', 'query'],'Example ' + example.id + ' not Found')
+                throw error(20006, 'update.updateExamples.notFound')
+              }
               return exampleObj.updateAttributes(
                 { example : example.example }, {lock:"UPDATE", transaction: t })
             })
         })
-        return promise
       }
     }
 
@@ -246,7 +247,7 @@ var update = function (req, rep) {
         return Word.findAll(
           { where : ["id IN ("+p.antonyms.map(function(n){ return n.id}).join(',')+")"]}, { transaction : t})
           .then(function(antonymsObj){
-            console.log(antonymsObj.map(function(n){ return n.values}))
+            //console.log(antonymsObj.map(function(n){ return n.values}))
             if(antonymsObj === null || antonymsObj.length !== p.antonyms.length){
               throw error(20005, 'add.updateAntonyms.find.NotFound')
             }
@@ -269,9 +270,9 @@ var update = function (req, rep) {
         return Word.findAll(
           { where : ["id IN ("+p.relatives.map(function(n){ return n.id}).join(',')+")"]}, { transaction : t})
           .then(function(relativesObj){
-            console.log(relativesObj.map(function(n){ return n.values}))
+            //console.log(relativesObj.map(function(n){ return n.values}))
             if(relativesObj === null || relativesObj.length !== p.relatives.length){
-              throw error(20004, 'add.updateRelatives.find.NotFound')
+              throw error(20007, 'add.updateRelatives.find.NotFound')
             }
             req.log(['dictionary-api', 'debug', 'query'],'Relatives(s) Found')
 

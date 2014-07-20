@@ -1,8 +1,6 @@
 /*jsli
 nt bitwise: true, continue: true, debug: true, devel: true, eqeq: true, evil: true, forin: true, indent: 2, maxerr: 50, maxlen: 250, node: true, nomen: true, plusplus: true, regexp: true, sloppy: true, sub: true, vars: true, es5: true */
-
-var async = require('async'),
-    Promise = require("bluebird"),
+var Promise = require("bluebird"),
     Hapi = require('hapi'),
     error = require('./utils').error
 
@@ -121,7 +119,8 @@ var add = function (req, rep) {
 
 
     var insertWord = function(){
-      return word.save({lock: "UPDATE",transaction: t})    
+      return word.save({lock: "UPDATE",transaction: t})
+       
     }    
 
     var setLanguageId = function(){
@@ -156,6 +155,9 @@ var add = function (req, rep) {
           req.log(['dictionary-api', 'debug', 'add'],'Hyperlinks Found')
           return word.setHyperlinks(hyperlinks, {transaction : t})
         })
+        .catch(function(err){
+          throw error(20056, 'add.insertDefinitions.duplicate')
+        })
       }
       return Promise.resolve()
     }
@@ -170,7 +172,9 @@ var add = function (req, rep) {
           })
           .then(function(relativesObj) {
             if(relativesObj.length === 0) {
-              throw error(20016, 'add.Relatives')
+              throw error(20007, 'add.Relatives')
+            } else if(checkDuplicateId(relativesObj)){
+              throw error(20052, 'add.Relatives')
             } else {
               req.log(['dictionary-api', 'debug', 'add'],'Relatives Found')
               return word.setRelatives(relativesObj,{transaction : t})
@@ -222,7 +226,7 @@ var add = function (req, rep) {
             if(antonyms.length === 0) {
               throw error(20005, 'add.Antonyms')
             } else if(checkDuplicateId(antonyms)){
-              throw error(20051, 'add.Synonyms')
+              throw error(20051, 'add.Antonyms')
             } else {
               req.log(['dictionary-api', 'debug', 'add'],'antonyms Found')
               return word.setAntonyms(antonyms,{transaction : t})
@@ -238,14 +242,16 @@ var add = function (req, rep) {
     function insertDefinitions() {
       if(p.definitions){
         req.log(['dictionary-api', 'debug', 'add'],'Inserting Definitions')
-        var promise = Promise.defer()
-        async.each(p.definitions, function(definition, callback){
-          promise = insertDefinition(definition)
+        return Promise.resolve(p.definitions).each(function(definition, callback){
+          return insertDefinition(definition)
             .then(function(){
               return setWordDefinitions()
             })
         })
-        return promise
+        .catch(function(err){
+          var code = (err.message.indexOf('Examples') > 0) ? 20055 : 20054
+          throw error(code, 'add.insertDefinitions.duplicate')
+        })
       }
       return Promise.resolve()
     }
@@ -271,22 +277,19 @@ var add = function (req, rep) {
     }
 
     function insertExamples(definitionObj, examples) {
-    if(examples){
-      req.log(['dictionary-api', 'debug', 'add'],'Inserting Examples')
-      return Example.bulkCreate( examples.map(function(n){ return {example:n}}), 
-          {validate: true, transaction : t})
-        .then(function(){
-          req.log(['dictionary-api', 'debug', 'add'],'Examples Added Successfully', examples)
-          return Example.findAll(
-            { where: ["example IN (\"" + examples.join('","') + "\")"]},
-            { transaction : t})
-        })
-        .then(function(examples){
-          return definitionObj.setExamples(examples, {lock:"UPDATE", transaction : t})
-        })
-        .then(function(){
-          req.log(['dictionary-api', 'debug', 'add'],'Examples added to Word Successfully')
-        })
+      if(examples){
+        req.log(['dictionary-api', 'debug', 'add'],'Inserting Examples')
+        return Example.bulkCreate( examples.map(function(n){ return {example:n}}), 
+            {validate: true, transaction : t})
+          .then(function(){
+            req.log(['dictionary-api', 'debug', 'add'],'Examples Added Successfully', examples)
+            return Example.findAll(
+              { where: ["example IN (\"" + examples.join('","') + "\")"]},
+              { transaction : t})
+          })
+          .then(function(examples){
+            return definitionObj.setExamples(examples, {lock:"UPDATE", transaction : t})
+          })
       }
       return Promise.resolve()
     }
@@ -320,7 +323,7 @@ var add = function (req, rep) {
       }
     }   
     
-    return insertWord()
+    return insertWord() 
     .then(function(){
       return setLanguageId()
     })
@@ -345,8 +348,13 @@ var add = function (req, rep) {
     .then(function(){
         MyCommit.call(t)
       },function(err){
-        MyRollback.call(t, err)
+      if(err.errno === 19) {
+        err = error(20053, 'add.insertDefinitions.duplicate')
+      }
+         
+      MyRollback.call(t, err)
     })
+
     
   })
 }

@@ -25,7 +25,6 @@ module.exports.word = function (req, rep) {
 
   var query = {}
   query.where = Object.keys(req.query).map(function(value){
-    if(value === 'limit') return
     return '`Words`.' + value + ' like "' + req.query[value] + '"'
   }).join(' AND ')
 
@@ -34,7 +33,7 @@ module.exports.word = function (req, rep) {
   if(!extended){
     query.attributes = fields.wordAttributes 
   }
-  
+  query.limit = limit
 
   Word.findAll(query)
   .then(function(result){

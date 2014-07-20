@@ -235,7 +235,7 @@ var handlers = require('../handlers'),
               extended: Joi.boolean().optional().default(false).example(true),
               limit: Joi.number().optional().max(100).default(10).example('10'),
               offset: Joi.number().optional().example('101'),
-              order: Joi.string().optional().example('id ASC').default('id ASC'),             
+              order: Joi.string().optional().example('id ASC').default('id ASC').regex(/.* (ASC|DESC)/),             
             }
           }
         }

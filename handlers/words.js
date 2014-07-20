@@ -22,12 +22,11 @@ module.exports.all = function (req, rep) {
 
   Word.findAll(req.query)
     
-    .done(function(err, result){{
+    .done(function(err, result){
       if(err){
         rep(error(null, 'get.words', err))
       }
       rep( { result: result })
-    }
     })
 }
 
@@ -37,11 +36,10 @@ module.exports.count = function (req, rep) {
       Word = models.Word
       
     Word.count()
-    .done(function(err, result){{
+    .done(function(err, result){
       if(err){
         rep(error(null, 'get.words', err))
       }
       rep( { result: result })
-    }
     })
 }

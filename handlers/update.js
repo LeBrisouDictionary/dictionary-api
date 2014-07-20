@@ -67,7 +67,7 @@ var update = function (req, rep) {
           req.log(['dictionary-api', 'warn', 'query'],prev_err)
           p.success = false
           p.rollback = true
-          rep(error(null, 'update.rollback', err))
+          rep(error(null, 'update.rollback', prev_err))
         })
     }
    

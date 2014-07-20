@@ -22,7 +22,7 @@ module.exports.fields = function(models){
 
 
 	return {
-		wordAttributes: ['lema', 'pos', 'gerund', 'participle', 'register', 'LanguageId'],
+		wordAttributes: ['id', 'lema', 'pos', 'gerund', 'participle', 'register', 'LanguageId'],
 		countryAttributes: ['id', 'country'],
 		languageAttributes: ['id', 'language'],
 		true: [

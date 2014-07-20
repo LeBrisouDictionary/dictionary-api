@@ -36,7 +36,7 @@ module.exports.word = function (req, rep) {
   }
   
 
-  Word.find(query)
+  Word.findAll(query)
   .then(function(result){
     rep( { result: result })
   })
@@ -57,14 +57,18 @@ module.exports.random = function (req, rep) {
       Example = models.Example,
       fields = Fields(models)
 
+  var query = {  }
+
+  query.include = fields[req.query.extended]
   if(!req.query.extended){
     query.attributes = fields.wordAttributes 
   }
 
   return Word.count()
   .then(function(count){
-    return Word.find({ where : { id : Math.floor((Math.random() * count) + 1)},
-      include : fields[req.query.extended]})
+    query.where = { id : Math.floor((Math.random() * count) + 1) }
+    
+    return Word.find(query)
   })
   .then(function(result){
     if(!req._isBailed && !req._isReplied) {

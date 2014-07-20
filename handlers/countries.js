@@ -21,3 +21,18 @@ module.exports.all = function(req, rep){
     rep(error(null, 'get.countries', err))
   })
 }
+
+
+module.exports.count = function(req, rep){
+  var db_plugin = req.server.plugins['dictionary-rdbms'],
+      models = db_plugin.models,
+      Country = models.Country
+     
+  Country.count()
+  .then(function(result){
+    rep({ result: result })  
+  })
+  .catch(function(err){
+    rep(error(null, 'get.countries', err))
+  })
+}

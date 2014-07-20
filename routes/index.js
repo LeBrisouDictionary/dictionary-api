@@ -1,14 +1,14 @@
 
 var handlers = require('../handlers'),
-    Joi = require('joi')
+    Joi = require('joi'),
     /**
      * Hapi Routes : http://hapijs.com/api#serverrouteoptions
      * @type {Array}
      */
     routes = [
       {
-        path: "/",
-        method: "DELETE",
+        path: '/',
+        method: 'DELETE',
         config : {
           tags: ['dictionary-api'],
           description: 'Delete a Word by id',
@@ -32,8 +32,8 @@ var handlers = require('../handlers'),
         }
       },
       {
-        path: "/",
-        method: "PUT",
+        path: '/',
+        method: 'PUT',
         config : {
           tags: ['dictionary-api'],
           description: 'Add word into RDBMS',
@@ -101,8 +101,8 @@ var handlers = require('../handlers'),
         }
       },
       {
-        path: "/",
-        method: "POST",
+        path: '/',
+        method: 'POST',
         config : {
           tags: ['dictionary-api'],
           description: 'update word into database',
@@ -177,13 +177,16 @@ var handlers = require('../handlers'),
         }
       },
       {
-        path: "/words/{limit?}",
-        method: "GET",
+        path: '/words',
+        method: 'GET',
         config : {
           tags: ['dictionary-api'],
           description: 'Search into database',
+          cache:{
+            expiresIn: 60 * 60
+          },
           pre: [
-            { method: handlers.words, assign: 'words'}
+            { method: handlers.words.all, assign: 'words'}
           ],
           handler: function(req, rep){ rep(req.pre.words) },
           validate : {
@@ -191,15 +194,29 @@ var handlers = require('../handlers'),
             query: {
               extended: Joi.boolean().optional().default(false),
               limit: Joi.number().optional().max(100).default(10).example('10'),
-              offset: Joi.number().optional().example("101"),
+              offset: Joi.number().optional().example('101'),
               order: Joi.string().optional().example('id ASC').default('id ASC'),             
             }
           }
         }
+      },{
+        path: '/words/count',
+        method: 'GET',
+        config : {
+          tags: ['dictionary-api'],
+          description: 'Count Words',
+          cache:{
+            expiresIn: 60 * 60
+          },
+          pre: [
+            { method: handlers.words.count, assign: 'words'}
+          ],
+          handler: function(req, rep){ rep(req.pre.words) },
+        }
       },
       {
-        path: "/language",
-        method: "GET",
+        path: '/language',
+        method: 'GET',
         config : {
           tags: ['dictionary-api'],
           description: 'Search words by Language',
@@ -214,15 +231,15 @@ var handlers = require('../handlers'),
               extended: Joi.boolean().optional().default(false),
               language: Joi.string().optional().example('Spanish').default('Spanish'),
               limit: Joi.number().optional().default(10).example('10'),
-              offset: Joi.number().optional().example("101"),
+              offset: Joi.number().optional().example('101'),
               order: Joi.string().optional().example('id ASC').default('id ASC')
             }
           }
         }
       },
       {
-        path: "/languages/{limit?}",
-        method: "GET",
+        path: '/languages/{limit?}',
+        method: 'GET',
         config : {
           tags: ['dictionary-api'],
           description: 'Search All Languages',
@@ -240,8 +257,8 @@ var handlers = require('../handlers'),
         }
       },
       {
-        path: "/countries/{limit?}",
-        method: "GET",
+        path: '/countries',
+        method: 'GET',
         config : {
           tags: ['dictionary-api'],
           description: 'Search All Countries',
@@ -259,8 +276,20 @@ var handlers = require('../handlers'),
         }
       },
       {
-        path: "/word",
-        method: "GET",
+        path: '/countries/count',
+        method: 'GET',
+        config : {
+          tags: ['dictionary-api'],
+          description: 'Count Countries',
+          pre: [
+            { method: handlers.countries.count, assign: 'language'}
+          ],
+          handler: function(req, rep){ rep(req.pre.language) },
+        }
+      },
+      {
+        path: '/word',
+        method: 'GET',
         config : {
           tags: ['dictionary-api'],
           description: 'Search a word by Id and/or lema and/or pos and/or gerund and/or participle, partial query are possible : like a%',
@@ -282,8 +311,8 @@ var handlers = require('../handlers'),
         }
       },
       {
-        path: "/word/random",
-        method: "GET",
+        path: '/word/random',
+        method: 'GET',
         config : {
           cache : {
             'expiresIn': 60 * 1,

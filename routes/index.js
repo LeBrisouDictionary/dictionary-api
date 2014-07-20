@@ -146,13 +146,13 @@ var handlers = require('../handlers'),
               'participle': Joi.string().optional().example('dormido'),
               'countries': Joi.array().includes(
                 Joi.object().keys({
-                  'country' : Joi.string().min(3).max(32).required().example('Spain'),
+                  'id' : Joi.number().required().example(1),
                   'frequency': Joi.number().min(0).max(100).integer().optional().example(10)
-                }).required().example({ country : 'Spain', frequency: 12})
+                }).required().example({ id : 1, frequency: 12})
               ).optional().example(
                 [
-                  { country : 'Spain', frequency: 12},
-                  { country : 'Costa Rica', frequency: 2}
+                  { id : 8, frequency: 12},
+                  { id : 10, frequency: 2}
                 ]
               ),
               'register': Joi.boolean().optional().example(true),

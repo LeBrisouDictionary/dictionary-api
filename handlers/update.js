@@ -127,7 +127,7 @@ var update = function (req, rep) {
         return p.countries.reduce(function(next, country){
           return next
             .then(function(){
-              return Country.find({ where : { country : country.country }}, { transaction : t})
+              return Country.find({ where : { id : country.id }}, { transaction : t})
             })
             .then(function(countryObj){
               if(countryObj === null){

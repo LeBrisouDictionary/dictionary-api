@@ -39,12 +39,7 @@ module.exports.fields = function(models){
 		  { model : Word, as : 'Synonyms', attributes: ['id'] },
 		  { model : Word, as : 'Antonyms', attributes: ['id'] },
 		  { model : Language, attributes: ['id', 'language'] },
-		  { model : Country, attributes: ['id', 'country'],
-		  	include: [
-		  		//{ model: WordCountry, attributes: ['frequency']},
-		  	]
-			},
-			
+		  { model : Country, attributes: ['id', 'country']},
 		  { model : Hyperlink, attributes: ['id', 'hyperlink']},
 		  { model : Definition, attributes: ['id', 'definition'], 
 		  	include : [

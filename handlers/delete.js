@@ -1,6 +1,7 @@
 var error = require('./utils').error
 
 module.exports = function (req, rep) {
+  if(process.env.NODE_ENV === "prod") throw error(400, 'Delete.Word');
   var db_plugin = req.server.plugins['dictionary-rdbms'],
     models = db_plugin.models,
     Word = models.Word,
